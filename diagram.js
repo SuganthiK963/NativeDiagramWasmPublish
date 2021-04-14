@@ -161,7 +161,19 @@ window.measureScrollValues = function (diagramId) {
     var point = { X: element.scrollLeft, Y: element.scrollTop, Width: element.scrollWidth, Height: element.scrollHeight };
     return point;
 }
-
+window.pathPoints = async function (pathPointsObj) {
+    var pathPoints = {};
+    if (pathPointsObj) {
+        var result = Object.keys(pathPointsObj).map((key) => [pathPointsObj[key], key]);
+        for (var i = 0; i < result.length; i++) {
+            if (result.length > 0) {
+                var data = result[i][1];
+                pathPoints[result[i][0]] = findSegmentPoints(data);
+            }
+        }
+    }
+    return pathPoints;
+}
 window.findSegmentPoints = function (pathData) {
     var pts = [];
     var sample;
@@ -554,6 +566,10 @@ function invokeDiagramEvents(e, component) {
             args.eventInvokeValue = ++window.eventInvokeValue;
         }
         if (e.type != "scroll" || (e.type == "scroll" && !isMouseWheel)) {
+            if (e.type == "mousemove") {
+                var t0 = Date.now();
+                console.log("JS:"+t0);
+            }
             component.invokeMethodAsync('InvokeDiagramEvents', args);
         }
     }
@@ -600,7 +616,6 @@ window.onChangeScrollValues = function (element, left, top, eventValue) {
         }
         element.scrollLeft = left;
         element.scrollTop = top;
-        //console.log("element.scrollLeft:" + element.scrollLeft + ",element.scrollTop:" + element.scrollTop);
         return measureScrollValues(window.scrollDiagramID);
     }
     return null;
@@ -610,17 +625,15 @@ window.updateZoomPanTool = function (val) {
     window.isZoomPan = val;
 }
 
-window.consoleLog = function (val) {
-   console.log(val);
-}
 
 window.updateInnerLayerSize = function (layerList, width, height, element, left, top, eventValue) {
     if (layerList != undefined && width != undefined && height != undefined && layerList.length > 0) {
-        //console.log("width:" + width + ",height:" + height);
-        for (var i = 0; i < layerList.length; i++) {
-            if (document.getElementById(layerList[i])) {
-                document.getElementById(layerList[i]).style.width = width;
-                document.getElementById(layerList[i]).style.height = height;
+        var layer;
+		for (var i = 0; i < layerList.length; i++) {
+            layer = document.getElementById(layerList[i]);
+			if (layer) {
+                layer.style.width = width;
+                layer.style.height = height;
             }
         }
     }
@@ -628,4 +641,7 @@ window.updateInnerLayerSize = function (layerList, width, height, element, left,
         isMouseWheel = false;
     }
    return onChangeScrollValues(element, left, top, eventValue);
+}
+window.onConsoleLog = function (val) {
+    console.log(val);
 }

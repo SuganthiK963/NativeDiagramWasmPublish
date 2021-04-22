@@ -350,6 +350,9 @@ window.wordWrapping = function (text, textValue, laneWidth) {
     var i = 0;
     var wrap = text.whiteSpace !== 'nowrap' ? true : false;
     var content = textValue || text.content;
+    if (content == undefined) {
+        content = "";
+    }
     var eachLine = content.split('\n');
     var txt;
     var words;
@@ -552,6 +555,8 @@ window.onAddWireEvents = function (element, component, interval) {
         invokeDiagramEvents(e, component), interval));
     element.addEventListener('mouseup', _.throttle(e => 
         invokeDiagramEvents(e, component), 0));
+    element.addEventListener('mouseleave', _.throttle(e => 
+        invokeDiagramEvents(e, component), 0));
 
     element.addEventListener('scroll', _.throttle(e => invokeDiagramEvents(e, component), interval));
     
@@ -566,10 +571,6 @@ function invokeDiagramEvents(e, component) {
             args.eventInvokeValue = ++window.eventInvokeValue;
         }
         if (e.type != "scroll" || (e.type == "scroll" && !isMouseWheel)) {
-            if (e.type == "mousemove") {
-                var t0 = Date.now();
-                console.log("JS:"+t0);
-            }
             component.invokeMethodAsync('InvokeDiagramEvents', args);
         }
     }
@@ -586,9 +587,11 @@ function getMouseEvents(evt) {
     if (evt.currentTarget) {
         var bounds = measureScrollValues(evt.currentTarget.id);
         mouseEventArgs.diagramCanvasScrollBounds = bounds;
+        mouseEventArgs.diagramGetBoundingClientRect = evt.currentTarget.getBoundingClientRect();
     } else if (evt.target) {
         var bounds = measureScrollValues(evt.target.id);
         mouseEventArgs.diagramCanvasScrollBounds = bounds;
+        mouseEventArgs.diagramGetBoundingClientRect = evt.target.getBoundingClientRect();
     }
 
     if (evt.type == "mousewheel") {
@@ -604,6 +607,10 @@ function getMouseEvents(evt) {
    
     if (evt.type == "mouseup") {
         window.inAction = false;
+    }
+
+    if (evt.type == "mouseleave" || evt.type == "mousmove" || evt.type == "mousedown" || evt.type == "mouseup") {
+        evt.preventDefault();
     }
 
     return mouseEventArgs;
@@ -641,7 +648,4 @@ window.updateInnerLayerSize = function (layerList, width, height, element, left,
         isMouseWheel = false;
     }
    return onChangeScrollValues(element, left, top, eventValue);
-}
-window.onConsoleLog = function (val) {
-    console.log(val);
 }
